@@ -105,7 +105,7 @@ function dt($ts) { return date('Y-m-d H:i', (int)$ts); }
 .card { border:1px solid #e5e7eb; border-radius:12px; padding:16px; background:#fff; }
 .card h3 { margin:0 0 8px; font-size:16px; color:#111; }
 .card .value { font-size:24px; font-weight:700; }
-.tools { display:flex; gap:8px; margin:8px 0 12px; }
+.tools { display:flex; align-items:center; gap:8px; margin:8px 0 12px; }
 .button { padding:6px 10px; border:1px solid #d1d5db; border-radius:8px; background:#f9fafb; cursor:pointer; }
 .button.active { background:#111827; color:#fff; border-color:#111827; }
 .table-wrap { overflow:auto; border:1px solid #e5e7eb; border-radius:12px; }
@@ -113,10 +113,15 @@ table { width:100%; border-collapse:collapse; }
 th, td { padding:10px 12px; border-bottom:1px solid #f3f4f6; text-align:left; }
 th { background:#fafafa; cursor:pointer; user-select:none; position:sticky; top:0; }
 .note { color:#6b7280; font-size:12px; }
+.typecho-page-title { margin:25px 0 10px;}
+.typecho-page-title h2 { margin:0; font-size:1.28571em; line-height:1.4; }
 </style>
 
 <div class="main">
   <div class="body container">
+    <div class="typecho-page-title">
+      <h2>阅读量看板</h2>
+    </div>
     <div class="viewstats-cards">
       <div class="card">
         <h3>总阅读量</h3>
@@ -126,7 +131,6 @@ th { background:#fafafa; cursor:pointer; user-select:none; position:sticky; top:
       <div class="card">
         <h3>每日阅读量（总量）</h3>
         <div id="views-echart" style="height:260px;"></div>
-        <div class="note">说明：为系统每日“总阅读量”快照（非当日新增）。用于观察整体增长趋势。</div>
       </div>
     </div>
 
@@ -134,7 +138,7 @@ th { background:#fafafa; cursor:pointer; user-select:none; position:sticky; top:
       <div class="tools">
         <button class="button active" id="sortViews">按阅读量排序</button>
         <button class="button" id="sortCreated">按发布时间排序</button>
-        <span class="note">（也可点击列头切换升/降序）</span>
+        <span class="note">（点击表头，切换升/降序）</span>
       </div>
       <div class="table-wrap">
         <table id="postsTable">
@@ -162,9 +166,6 @@ th { background:#fafafa; cursor:pointer; user-select:none; position:sticky; top:
           </tbody>
         </table>
       </div>
-      <p class="note" style="margin-top:8px;">
-        想看“每日新增阅读量”可在前端做相邻两点差分，或在后端另建增量表；当前看板记录的是<strong>每日总量</strong>快照（从安装当天起累计）。
-      </p>
     </div>
   </div>
 </div>
@@ -175,24 +176,41 @@ th { background:#fafafa; cursor:pointer; user-select:none; position:sticky; top:
   var chart = echarts.init(document.getElementById('views-echart'));
   var option = {
     tooltip: { trigger:'axis' },
-    legend: { data: ['总阅读量', '每日新增'] },
+    legend: { data: ['每日阅读量', '总阅读量'] },
     xAxis: { type:'category', data: <?php echo json_encode($days); ?> },
-    yAxis: { type:'value' },
+    yAxis: [
+      {
+        type:'value',
+        name:'每日阅读量',
+        position:'left',
+        axisLine:{ show:true },
+        axisLabel:{ formatter:'{value}' }
+      },
+      {
+        type:'value',
+        name:'总阅读量',
+        position:'right',
+        alignTicks:true,
+        axisLine:{ show:true },
+        axisLabel:{ formatter:'{value}' }
+      }
+    ],
     series: [
+      {
+        name:'每日阅读量',
+        type:'bar',
+        yAxisIndex:0,
+        data: <?php echo json_encode($increments, JSON_NUMERIC_CHECK); ?>
+      },
       {
         name:'总阅读量',
         type:'line',
         smooth:true,
+        yAxisIndex:1,
         data: <?php echo json_encode($totals, JSON_NUMERIC_CHECK); ?>
-      },
-      {
-        name:'每日新增',
-        type:'bar',
-        smooth:true,
-        data: <?php echo json_encode($increments, JSON_NUMERIC_CHECK); ?>
       }
     ],
-    grid: { left:40, right:24, top:32, bottom:24 }
+    grid: { left:40, right:48, top:32, bottom:24 }
   };
   chart.setOption(option);
 
