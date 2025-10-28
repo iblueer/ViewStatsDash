@@ -66,11 +66,31 @@ try {
     $dailyRows = $db->fetchAll($dailySelect);
 
     // 4) 文章明细（默认按阅读量降序）
-    $postSelect = $db->select('cid', 'title', 'views', 'created')
+    $postSelect = $db->select('cid', 'title', 'views', 'created', 'slug')
                      ->from($tblPosts)
                      ->where('type = ?', 'post')
                      ->order('views', Typecho_Db::SORT_DESC);
     $postRows = $db->fetchAll($postSelect);
+
+    foreach ($postRows as &$row) {
+        try {
+            $createdTs = (int) $row['created'];
+            $routeParams = [
+                'cid'   => $row['cid'],
+                'slug'  => $row['slug'],
+                'year'  => date('Y', $createdTs),
+                'month' => date('m', $createdTs),
+                'day'   => date('d', $createdTs),
+                'date'  => date('Y/m/d', $createdTs),
+            ];
+
+            $route = \Typecho_Router::url('post', $routeParams);
+            $row['permalink'] = Typecho_Common::url($route, $options->siteUrl);
+        } catch (\Throwable $th) {
+            $row['permalink'] = Typecho_Common::url('/index.php/archives/' . $row['cid'] . '.html', $options->siteUrl);
+        }
+    }
+    unset($row);
 
 } catch (Typecho_Db_Query_Exception $e) {
     panic($e->getMessage());
@@ -155,7 +175,7 @@ th { background:#fafafa; cursor:pointer; user-select:none; position:sticky; top:
             <tr>
               <td><?php echo (int)$r['cid']; ?></td>
               <td>
-                <a href="<?php echo Typecho_Common::url('/index.php/archives/'.$r['cid'].'.html', $options->siteUrl); ?>" target="_blank" rel="noopener">
+                <a href="<?php echo htmlspecialchars($r['permalink']); ?>" target="_blank" rel="noopener">
                   <?php echo htmlspecialchars($r['title']); ?>
                 </a>
               </td>
