@@ -4,7 +4,7 @@
 set -euo pipefail
 
 REMOTE_USER="${REMOTE_USER:-root}"
-REMOTE_HOST="" #博客服务器IP地址或域名
+REMOTE_HOST="ssh.maemo.cc" #博客服务器IP地址或域名
 REMOTE="${REMOTE_USER}@${REMOTE_HOST}"
 # REMOTE_DIR="/root/app/typecho/usr/plugins/ViewStatsDash"
 TYPECHO_INSTALL_DIR="/root/app/typecho"
